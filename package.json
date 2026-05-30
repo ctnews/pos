@@ -1,0 +1,41 @@
+{
+  "name": "pos-app",
+  "version": "2.0.0",
+  "description": "Point of Sale web application with MongoDB",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:client": "vite",
+    "dev:server": "tsx watch server/index.ts",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "start:server": "tsx server/index.ts"
+  },
+  "keywords": ["pos", "react", "typescript", "mongodb"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "chart.js": "^4.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "html5-qrcode": "^2.3.8",
+    "mongoose": "^8.6.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "concurrently": "^9.0.1",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.2"
+  }
+}

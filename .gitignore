@@ -1,0 +1,9 @@
+node_modules/
+dist/
+dist.zip
+*.zip
+legacy/
+data/
+*.local
+.env
+assets/*.bak
