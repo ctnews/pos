@@ -6,8 +6,23 @@ import type { DataStore } from './types.js';
 let store: DataStore | null = null;
 
 export async function initStore(): Promise<DataStore> {
+  if (store) return store;
+
   const mode = process.env.DB_MODE || 'auto';
   const uri = process.env.MONGODB_URI;
+  const onVercel = Boolean(process.env.VERCEL);
+
+  if (onVercel) {
+    if (!uri) {
+      throw new Error('MONGODB_URI is required on Vercel. Add it in Project Settings → Environment Variables.');
+    }
+    await connectDb(uri);
+    const mongoStore = new MongoStore();
+    await mongoStore.seedIfEmpty();
+    store = mongoStore;
+    console.log('Using MongoDB Atlas (Vercel)');
+    return store;
+  }
 
   if (mode === 'file') {
     const fileStore = new FileStore();
@@ -27,7 +42,7 @@ export async function initStore(): Promise<DataStore> {
     return store;
   }
 
-  // auto: try MongoDB, fall back to local files
+  // auto: try MongoDB, fall back to local files (local dev only)
   if (uri) {
     try {
       await connectDb(uri);
@@ -38,7 +53,7 @@ export async function initStore(): Promise<DataStore> {
       return store;
     } catch (err) {
       console.warn('\n⚠️  MongoDB Atlas unreachable — using local file storage instead');
-      console.warn('   To use Atlas: whitelist IP 129.224.203.219 in Network Access\n');
+      console.warn('   Atlas: Network Access → allow 0.0.0.0/0 for Vercel/serverless\n');
       if (process.env.ALLOW_FILE_FALLBACK === 'false') {
         throw err;
       }

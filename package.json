@@ -11,7 +11,6 @@
     "preview": "vite preview",
     "start:server": "tsx server/index.ts"
   },
-  "keywords": ["pos", "react", "typescript", "mongodb"],
   "author": "",
   "license": "MIT",
   "dependencies": {
@@ -32,6 +31,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@vercel/node": "^5.8.8",
     "@vitejs/plugin-react": "^4.3.1",
     "concurrently": "^9.0.1",
     "tsx": "^4.19.0",
