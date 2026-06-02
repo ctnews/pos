@@ -411,8 +411,8 @@ header h1 {
     max-width: 100%;
     margin: 0 auto;
     padding: 12px 8px;
-    font-size: 10px;
-    line-height: 1.35;
+    font-size: 14px;
+    line-height: 1.4;
 }
 
 .receipt-content-thermal .receipt-header {
@@ -421,33 +421,34 @@ header h1 {
 }
 
 .receipt-content-thermal .receipt-header h2 {
-    font-size: 13px;
+    font-size: 18px;
 }
 
 .receipt-content-thermal .receipt-header p {
-    font-size: 9px;
+    font-size: 12px;
 }
 
 .receipt-content-thermal .receipt-item-name {
     font-weight: bold;
     word-break: break-word;
+    font-size: 13px;
 }
 
 .receipt-content-thermal .receipt-item-qty {
-    font-size: 8px;
+    font-size: 11px;
     color: #666;
 }
 
 .receipt-content-thermal .receipt-total {
-    font-size: 9px;
+    font-size: 13px;
 }
 
 .receipt-content-thermal .receipt-total-final {
-    font-size: 11px;
+    font-size: 16px;
 }
 
 .receipt-content-thermal .receipt-footer {
-    font-size: 9px;
+    font-size: 12px;
 }
 
 .modal-content:has(.receipt-content-thermal) {

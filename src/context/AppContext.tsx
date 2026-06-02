@@ -32,6 +32,7 @@ import {
   removeFromCart,
   updateCartQuantity,
 } from '../services/cartService';
+import { printReceipt } from '../utils/receiptPrint';
 
 interface AppContextValue {
   currentUser: AuthUser | null;
@@ -251,16 +252,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (isAdmin) {
         setSales((prev) => [...prev, result.sale]);
       }
-      setReceiptData({
-        sale: result.sale,
-        items: [...cart],
-        date: new Date(result.sale.date),
-      });
-      setOpenModal('receipt');
+
+      const receiptItems = [...cart];
+      const receiptDate = new Date(result.sale.date);
+      const printed = printReceipt(receiptItems, result.sale, taxRate, receiptDate);
+
+      if (printed) {
+        setCart([]);
+        setReceiptData(null);
+        setOpenModal(null);
+      } else {
+        setReceiptData({
+          sale: result.sale,
+          items: receiptItems,
+          date: receiptDate,
+        });
+        setOpenModal('receipt');
+        alert('Pop-ups are blocked. Allow pop-ups to print automatically, or use Print on the receipt screen.');
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Checkout failed');
     }
-  }, [cart, isAdmin]);
+  }, [cart, isAdmin, taxRate]);
 
   const finishCheckout = useCallback(() => {
     setCart([]);
