@@ -255,9 +255,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       const receiptItems = [...cart];
       const receiptDate = new Date(result.sale.date);
-      const printed = printReceipt(receiptItems, result.sale, taxRate, receiptDate);
+      const printResult = await printReceipt(receiptItems, result.sale, taxRate, receiptDate);
 
-      if (printed) {
+      if (printResult === 'silent') {
+        setCart([]);
+        setReceiptData(null);
+        setOpenModal(null);
+      } else if (printResult === 'browser') {
         setCart([]);
         setReceiptData(null);
         setOpenModal(null);
@@ -268,7 +272,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           date: receiptDate,
         });
         setOpenModal('receipt');
-        alert('Pop-ups are blocked. Allow pop-ups to print automatically, or use Print on the receipt screen.');
+        alert(
+          'Could not print. Enable SILENT_PRINT=true in .env on the local server, or allow printing in the browser.',
+        );
       }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Checkout failed');

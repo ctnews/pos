@@ -12,10 +12,10 @@ export function ReceiptModal() {
 
   const { sale, items, date } = receiptData;
 
-  const handlePrint = () => {
-    const ok = printReceipt(items, sale, taxRate, date);
-    if (!ok) {
-      alert('Please allow pop-ups to print the receipt.');
+  const handlePrint = async () => {
+    const result = await printReceipt(items, sale, taxRate, date);
+    if (result === 'failed') {
+      alert('Print failed. Check SILENT_PRINT and RECEIPT_PRINTER in server .env.');
     }
   };
 

@@ -8,6 +8,8 @@ const settingsSchema = new Schema(
     nextProductId: { type: Number, default: 16 },
     nextSaleId: { type: Number, default: 1 },
     nextUserId: { type: Number, default: 2 },
+    silentPrint: { type: Boolean, default: false },
+    receiptPrinter: { type: String, default: '' },
   },
   { versionKey: false },
 );

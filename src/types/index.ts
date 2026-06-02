@@ -1,4 +1,4 @@
-export type TabId = 'pos' | 'products' | 'tax' | 'analytics' | 'users';
+export type TabId = 'pos' | 'products' | 'tax' | 'analytics' | 'users' | 'printer';
 
 export type UserRole = 'admin' | 'cashier';
 

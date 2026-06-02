@@ -1,4 +1,5 @@
 import { RECEIPT_STORE, RECEIPT_WIDTH } from '../constants/defaults';
+import { api } from '../services/api';
 import { formatKs, getSoldPrice } from './format';
 
 export interface ReceiptPrintItem {
@@ -83,11 +84,20 @@ const RECEIPT_PRINT_STYLES = `
   }
 `;
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 function buildReceiptPrintHtml(
   items: ReceiptPrintItem[],
   sale: ReceiptPrintSale,
   taxRate: number,
   date: Date,
+  autoPrint: boolean,
 ): string {
   const itemRows = items
     .map((item) => {
@@ -102,6 +112,16 @@ function buildReceiptPrintHtml(
         </div>`;
     })
     .join('');
+
+  const printScript = autoPrint
+    ? `<script>
+    window.onload = function() {
+      window.print();
+      window.onafterprint = function() { window.close(); };
+      setTimeout(function() { window.close(); }, 3000);
+    };
+  </script>`
+    : '';
 
   return `<!DOCTYPE html>
 <html>
@@ -134,37 +154,126 @@ function buildReceiptPrintHtml(
     <p>အားပေးမှုကို အထူးကျေးဇူးတင်ပါတယ်!</p>
     <p>ပျော်ရွှင်စရာနေ့လေးဖြစ်ပါစေ!</p>
   </div>
-  <script>
-    window.onload = function() {
-      window.print();
-      window.onafterprint = function() { window.close(); };
-      setTimeout(function() { window.close(); }, 3000);
-    };
-  </script>
+  ${printScript}
 </body>
 </html>`;
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+function buildSilentPrintPayload(
+  items: ReceiptPrintItem[],
+  sale: ReceiptPrintSale,
+  taxRate: number,
+  date: Date,
+) {
+  return {
+    storeName: RECEIPT_STORE.name,
+    addressLine1: RECEIPT_STORE.addressLine1,
+    addressLine2: RECEIPT_STORE.addressLine2,
+    phones: RECEIPT_STORE.phones,
+    date: date.toLocaleString(),
+    taxRate,
+    subtotal: sale.subtotal,
+    tax: sale.tax,
+    total: sale.total,
+    items: items.map((item) => {
+      const unitPrice = getSoldPrice(item);
+      return {
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice,
+        lineTotal: unitPrice * item.quantity,
+      };
+    }),
+  };
 }
 
-/** Opens print dialog for default printer. Returns false if pop-up was blocked. */
-export function printReceipt(
+/** Send receipt to server printer (no browser dialog). */
+async function printReceiptSilent(
+  items: ReceiptPrintItem[],
+  sale: ReceiptPrintSale,
+  taxRate: number,
+  date: Date,
+): Promise<boolean> {
+  try {
+    await api.printReceipt(buildSilentPrintPayload(items, sale, taxRate, date));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Browser print fallback (single print dialog). */
+function printReceiptBrowser(
   items: ReceiptPrintItem[],
   sale: ReceiptPrintSale,
   taxRate: number,
   date: Date,
 ): boolean {
-  const printWindow = window.open('', '_blank', 'width=280,height=800');
-  if (!printWindow) {
+  const iframe = document.createElement('iframe');
+  iframe.setAttribute('aria-hidden', 'true');
+  iframe.style.cssText =
+    'position:fixed;right:0;bottom:0;width:0;height:0;border:none;visibility:hidden';
+  document.body.appendChild(iframe);
+
+  const doc = iframe.contentDocument ?? iframe.contentWindow?.document;
+  if (!doc) {
+    document.body.removeChild(iframe);
+    const win = window.open('', '_blank', 'width=280,height=800');
+    if (!win) return false;
+    win.document.write(buildReceiptPrintHtml(items, sale, taxRate, date, true));
+    win.document.close();
+    return true;
+  }
+
+  doc.open();
+  doc.write(buildReceiptPrintHtml(items, sale, taxRate, date, false));
+  doc.close();
+
+  const win = iframe.contentWindow;
+  if (!win) {
+    document.body.removeChild(iframe);
     return false;
   }
-  printWindow.document.write(buildReceiptPrintHtml(items, sale, taxRate, date));
-  printWindow.document.close();
+
+  const cleanup = () => {
+    if (iframe.parentNode) document.body.removeChild(iframe);
+  };
+
+  win.onafterprint = cleanup;
+  setTimeout(cleanup, 5000);
+
+  win.focus();
+  win.print();
+
   return true;
+}
+
+let printInProgress = false;
+
+export type PrintResult = 'silent' | 'browser' | 'failed';
+
+/**
+ * Print receipt: silent server print when configured, else one browser dialog.
+ */
+export async function printReceipt(
+  items: ReceiptPrintItem[],
+  sale: ReceiptPrintSale,
+  taxRate: number,
+  date: Date,
+): Promise<PrintResult> {
+  if (printInProgress) return 'silent';
+  printInProgress = true;
+
+  try {
+    const silent = await printReceiptSilent(items, sale, taxRate, date);
+    if (silent) return 'silent';
+
+    if (printReceiptBrowser(items, sale, taxRate, date)) {
+      return 'browser';
+    }
+
+    return 'failed';
+  } finally {
+    printInProgress = false;
+  }
 }

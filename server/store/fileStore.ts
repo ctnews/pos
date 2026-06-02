@@ -1,7 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import type { CheckoutItem, DataStore, Product, PublicUser, Sale, Settings, UserRecord, UserRole } from './types.js';
+import type { CheckoutItem, DataStore, PrinterSettingsInput, Product, PublicUser, Sale, Settings, UserRecord, UserRole } from './types.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_FILE = path.join(__dirname, '../../data/store.json');
@@ -12,6 +12,8 @@ const DEFAULT_SETTINGS: Settings = {
   nextProductId: 16,
   nextSaleId: 1,
   nextUserId: 2,
+  silentPrint: false,
+  receiptPrinter: '',
 };
 
 const DEFAULT_PRODUCTS: Product[] = [
@@ -47,7 +49,12 @@ async function readDb(): Promise<DbData> {
     return {
       products: data.products ?? [],
       sales: data.sales ?? [],
-      settings: { ...DEFAULT_SETTINGS, ...data.settings },
+      settings: {
+        ...DEFAULT_SETTINGS,
+        ...data.settings,
+        silentPrint: data.settings?.silentPrint ?? DEFAULT_SETTINGS.silentPrint,
+        receiptPrinter: data.settings?.receiptPrinter ?? DEFAULT_SETTINGS.receiptPrinter,
+      },
       qrCodes: data.qrCodes ?? {},
       users: data.users ?? [],
     };
@@ -187,6 +194,17 @@ export class FileStore implements DataStore {
     db.settings.taxRate = rate;
     await writeDb(db);
     return rate;
+  }
+
+  async updatePrinterSettings(input: PrinterSettingsInput): Promise<PrinterSettingsInput> {
+    const db = await readDb();
+    db.settings.silentPrint = Boolean(input.silentPrint);
+    db.settings.receiptPrinter = String(input.receiptPrinter ?? '').trim();
+    await writeDb(db);
+    return {
+      silentPrint: db.settings.silentPrint,
+      receiptPrinter: db.settings.receiptPrinter,
+    };
   }
 
   async verifyPassword(password: string): Promise<boolean> {

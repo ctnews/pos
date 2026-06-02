@@ -10,6 +10,37 @@ Point of Sale web application (React + TypeScript + Express + MongoDB).
 
 Default admin login: `admin` / `admin123`
 
+## Silent receipt printing (local POS)
+
+Browsers cannot print without a dialog. For **one-click checkout printing** with no popup, run the app locally (`npm run dev`) and add to `.env`:
+
+```env
+SILENT_PRINT=true
+RECEIPT_PRINTER=Your-Printer-Name
+```
+
+| OS | Find printer name |
+|----|-------------------|
+| **Linux** | `lpstat -p` (use the name after `printer`) |
+| **Windows** | Settings → Bluetooth & devices → Printers → copy exact name |
+
+**Linux:** install the print client first (one time):
+
+```bash
+sudo apt install cups-client
+lpstat -p
+```
+
+If `lp` is still missing, set a custom command in `.env`: `PRINT_COMMAND=/usr/bin/lp`
+
+Leave `RECEIPT_PRINTER` empty to use the system default printer.
+
+Set your thermal printer as the **default printer** in the OS, or set `RECEIPT_PRINTER` to its exact name.
+
+Restart the server after changing `.env`. Checkout will send the receipt directly to that printer.
+
+**Note:** Silent print does **not** work on Vercel (no access to your shop printer). Use the local server at the checkout PC.
+
 ## Deploy on Vercel
 
 Vercel runs the React app and the API as a serverless function. MongoDB Atlas must allow Vercel’s dynamic IPs.

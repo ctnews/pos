@@ -8,6 +8,7 @@ import settingsRouter from './routes/settings.js';
 import authRouter from './routes/auth.js';
 import usersRouter from './routes/users.js';
 import qrCodesRouter from './routes/qrCodes.js';
+import printRouter from './routes/print.js';
 
 export async function createApp() {
   await initStore();
@@ -27,6 +28,7 @@ export async function createApp() {
   app.use('/api/auth', authRouter);
   app.use('/api/users', usersRouter);
   app.use('/api/qr-codes', qrCodesRouter);
+  app.use('/api/print', printRouter);
 
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error(err);

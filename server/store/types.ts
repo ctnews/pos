@@ -38,6 +38,13 @@ export interface Settings {
   nextProductId: number;
   nextSaleId: number;
   nextUserId: number;
+  silentPrint: boolean;
+  receiptPrinter: string;
+}
+
+export interface PrinterSettingsInput {
+  silentPrint: boolean;
+  receiptPrinter: string;
 }
 
 export interface UserRecord {
@@ -70,6 +77,7 @@ export interface DataStore {
   checkout(items: CheckoutItem[]): Promise<{ sale: Sale; products: Product[] }>;
   getSettings(): Promise<Settings>;
   updateTaxRate(rate: number): Promise<number>;
+  updatePrinterSettings(input: PrinterSettingsInput): Promise<PrinterSettingsInput>;
   verifyPassword(password: string): Promise<boolean>;
   getUsers(): Promise<PublicUser[]>;
   createUser(input: { username: string; password: string; role: UserRole }): Promise<PublicUser>;

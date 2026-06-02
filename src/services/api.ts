@@ -109,6 +109,27 @@ export const api = {
       body: JSON.stringify({ taxRate }),
     }),
 
+  getPrinterSettings: () =>
+    request<{
+      silentPrint: boolean;
+      receiptPrinter: string;
+      system: { available: boolean; platform: string; hint: string };
+    }>('/settings/printer'),
+
+  updatePrinterSettings: (input: { silentPrint: boolean; receiptPrinter: string }) =>
+    request<{ silentPrint: boolean; receiptPrinter: string }>('/settings/printer', {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+
+  listPrinters: () =>
+    request<{
+      printers: string[];
+      system: { available: boolean; platform: string; hint: string };
+    }>('/print/printers'),
+
+  testPrint: () => request<{ ok: boolean }>('/print/test', { method: 'POST' }),
+
   getUsers: () => request<AuthUser[]>('/users'),
 
   createUser: (input: { username: string; password: string; role: UserRole }) =>
@@ -121,6 +142,23 @@ export const api = {
 
   deleteUser: (id: number) =>
     request<{ ok: boolean }>(`/users/${id}`, { method: 'DELETE' }),
+
+  printReceipt: (payload: {
+    storeName: string;
+    addressLine1: string;
+    addressLine2: string;
+    phones: string;
+    date: string;
+    items: { name: string; quantity: number; unitPrice: number; lineTotal: number }[];
+    subtotal: number;
+    tax: number;
+    total: number;
+    taxRate: number;
+  }) =>
+    request<{ ok: boolean }>('/print/receipt', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
 
   saveQrCode: (productCode: string, dataUrl: string) =>
     request<{ ok: boolean }>(`/qr-codes/${encodeURIComponent(productCode)}`, {

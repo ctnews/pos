@@ -3,7 +3,7 @@ import { SaleModel } from '../models/Sale.js';
 import { QrCodeModel } from '../models/QrCode.js';
 import { UserModel } from '../models/User.js';
 import { getSettings } from '../models/Settings.js';
-import type { CheckoutItem, DataStore, Product, PublicUser, Sale, Settings, UserRole } from './types.js';
+import type { CheckoutItem, DataStore, PrinterSettingsInput, Product, PublicUser, Sale, Settings, UserRole } from './types.js';
 
 export class MongoStore implements DataStore {
   readonly mode = 'mongo' as const;
@@ -134,6 +134,8 @@ export class MongoStore implements DataStore {
       nextProductId: s.nextProductId,
       nextSaleId: s.nextSaleId,
       nextUserId: s.nextUserId ?? 2,
+      silentPrint: s.silentPrint ?? process.env.SILENT_PRINT === 'true',
+      receiptPrinter: s.receiptPrinter ?? process.env.RECEIPT_PRINTER?.trim() ?? '',
     };
   }
 
@@ -142,6 +144,17 @@ export class MongoStore implements DataStore {
     settings.taxRate = rate;
     await settings.save();
     return rate;
+  }
+
+  async updatePrinterSettings(input: PrinterSettingsInput): Promise<PrinterSettingsInput> {
+    const settings = await getSettings();
+    settings.silentPrint = Boolean(input.silentPrint);
+    settings.receiptPrinter = String(input.receiptPrinter ?? '').trim();
+    await settings.save();
+    return {
+      silentPrint: settings.silentPrint,
+      receiptPrinter: settings.receiptPrinter,
+    };
   }
 
   async verifyPassword(password: string): Promise<boolean> {
